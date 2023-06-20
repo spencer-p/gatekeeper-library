@@ -1,0 +1,34 @@
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: disallowedleases
+  annotations:
+    metadata.gatekeeper.sh/title: "Disallowed Leases"
+    metadata.gatekeeper.sh/version: 1.0.0
+    description: >-
+      Disallowed leases that begin with a string from the specified list.
+spec:
+  crd:
+    spec:
+      names:
+        kind: DisallowedLeases
+      validation:
+        # Schema for the `parameters` field
+        openAPIV3Schema:
+          type: object
+          properties:
+            leases:
+              description: The list of prefixes a lease is not allowed to have.
+              type: array
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package disallowedleases
+
+        violation[{"msg": msg}] {
+          leasename := input.review.object.metadata.name
+          startswith(leasename, input.parameters.leases[_])
+          msg := sprintf("lease <%v> is banned, banned leases are %v", [leasename, input.parameters.leases])
+        }

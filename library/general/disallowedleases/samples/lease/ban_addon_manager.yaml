@@ -1,0 +1,12 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: DisallowedLeases
+metadata:
+  name: ban-addon-manager
+spec:
+  match:
+    kinds:
+      - kinds: ["Lease"]
+        apiGroups: ["coordination.k8s.io"]
+  parameters:
+    leases:
+      - "addon-manager"
